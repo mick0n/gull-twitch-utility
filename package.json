@@ -1,0 +1,31 @@
+{
+  "name": "gull-twitch-utility",
+  "version": "1.0.0",
+  "description": "Utility for streamers to get information and events during livestream",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mick0n/gull-twitch-utility.git"
+  },
+  "keywords": [
+    "Twitch",
+    "stream",
+    "streamer",
+    "utility",
+    "nodejs",
+    "obs"
+  ],
+  "author": "Mikael Norrman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mick0n/gull-twitch-utility/issues"
+  },
+  "homepage": "https://github.com/mick0n/gull-twitch-utility#readme",
+  "dependencies": {
+    "express": "^4.14.0",
+    "needle": "^1.1.0"
+  }
+}
