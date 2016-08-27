@@ -14,15 +14,15 @@ const defaultOptions = {
 	headers: headers
 };
 
-needle.get(baseUrl, defaultOptions, (error, response)=> {
-	if (error) console.log(error);
-	if (response.body) console.log(response.body);
-});
+// needle.get(baseUrl, defaultOptions, (error, response) => {
+// 	if (error) console.log(error);
+// 	if (response.body) console.log(response.body);
+// });
 
 var app = new express();
 
 app.get('/', (req, res) => {
-	res.end();
+	res.send('Hello World');
 });
 
 var server = app.listen(8000, () => {
