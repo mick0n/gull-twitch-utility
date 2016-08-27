@@ -5,7 +5,8 @@ var express = require('express');
 const baseUrl = 'https://api.twitch.tv/kraken';
 
 const headers = {
-	'Content-Type': 'application/json'
+	'Content-Type': 'application/json',
+	'Client-ID': config.clientId
 };
 
 const defaultOptions = {
