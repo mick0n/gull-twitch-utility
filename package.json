@@ -25,7 +25,12 @@
   },
   "homepage": "https://github.com/mick0n/gull-twitch-utility#readme",
   "dependencies": {
+    "ejs": "^2.5.1",
     "express": "^4.14.0",
-    "needle": "^1.1.0"
+    "irc": "^0.5.0",
+    "needle": "^1.1.0",
+    "node-notifier": "^4.6.1",
+    "transmitter": "^3.0.1",
+    "ws": "^1.1.1"
   }
 }

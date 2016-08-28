@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Tajtle</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			border: 0;
+			width: <%= reso.width %>px;
+			height: <%= reso.height %>px;
+		}
+
+		h1 {
+			background-color: white;
+		}
+
+		.content-centering {
+			overflow: hidden;
+			margin-left: auto;
+			margin-right: auto;
+			margin-top: <%= (reso.height / 2) - 80%>px;
+			width: 820px;
+			height: 160px;
+		}
+
+		@-webkit-keyframes slide {
+			0% {-webkit-transform: translateY(-160px);}
+			20% {-webkit-transform: translateY(0px);}
+			80% {-webkit-transform: translateY(0px);}
+			100% {-webkit-transform: translateY(-160px);}
+		}
+
+		.inner-content {
+			font-family: sans-serif;
+			text-align: center;
+			background-color: #C9DF72;
+			box-shadow: 5px 5px 15px #bbbbbb;
+			border-radius: 10px;
+			width: 800px;
+			height: 140px;
+			border: 3px solid #8DA336;
+			-webkit-transform: translateY(-160px);
+		}
+
+		.animate-inner-content {
+			-webkit-animation: slide 9s linear;
+		}
+
+		.content-title {
+			color: #708422;
+			font-size: 38px;
+			margin-top: 10px;
+		}
+
+		.content-text {
+			color: #435307;
+			font-size: 72px;
+		}
+	</style>
+	<script type="text/javascript" src="/pub/jquery-3.1.0.min.js"></script>
+</head>
+<body>
+	<div class="content-centering">
+		<div class="inner-content">
+			<div class="content-title">Kåntent</div>
+			<div class="content-text">Mår kontent</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		var socket = new WebSocket('ws://localhost:8001');
+		socket.onmessage = function(message) {
+			var messageData = JSON.parse(message.data);
+			if(messageData.type === 'follow' || messageData.type === 'greet') {
+				$('.content-title').html(messageData.title);
+				$('.content-text').html(messageData.message);
+				$('.inner-content').addClass('animate-inner-content');
+				setTimeout(function() {
+					$('.inner-content').removeClass('animate-inner-content');
+				}, 10000);
+			} else if(messageData.type === 'chat') {
+
+			}
+		}
+	</script>
+</body>
+</html>
