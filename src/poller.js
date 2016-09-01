@@ -2,7 +2,6 @@ var _ = require('underscore');
 var config = require('../config');
 var bus = require('./bus');
 var needle = require('needle');
-var nodeNotify = require('node-notifier');
 
 const baseUrl = 'https://api.twitch.tv/kraken';
 
@@ -45,15 +44,9 @@ var handlers = {
 
 				data.state = followerMap;
 				if (newFollowers.length > 0) {
-					nodeNotify.notify({
-						title: 'New Follower(s):',
-						message: newFollowers.join(', '),
-						icon: __dirname + '/public/gull_64.png',
-						sound: false
-					});
 					_.each(newFollowers, (follower) => {
 						bus.publish({
-							type: 'follow',
+							type: 'notification',
 							title: 'New Follower:',
 							message: follower
 						});
@@ -64,27 +57,35 @@ var handlers = {
 		});
 	},
 	viewers: (data) => {
-		//http://tmi.twitch.tv/group/user/mick0n_2/chatters
 		return new Promise((resolve, reject) => {
 			needle.get('http://tmi.twitch.tv/group/user/mick0n_2/chatters', (error, response) => {
 				if (error) {
 					return reject(error);
 				}
 				if (!data.state) {
-					data.state = response.body.chatters.viewers;
-					return resolve();
+					data.state = [];
 				}
 				console.log(response.body.chatters);
 				var newViewers = _.difference(response.body.chatters.viewers, data.state);
+				var lostViewers = _.difference(data.state, response.body.chatters.viewers);
 				if (newViewers.length > 0) {
 					console.log('Viewers', newViewers);
-					nodeNotify.notify({
-						title: 'New Viewer(s):',
-						message: newViewers.join(', '),
-						icon: __dirname + '/public/gull_64.png',
-						sound: false
-					});
 				}
+				if (lostViewers.length > 0) {
+					console.log('Lost viewers', lostViewers);
+				}
+				_.each(newViewers, (newViewer) => {
+					bus.publish({
+						type: 'viewer',
+						message: 'New viewer: ' + newViewer
+					});
+				});
+				_.each(lostViewers, (lostViewer) => {
+					bus.publish({
+						type: 'viewer',
+						message: 'Lost viewer: ' + lostViewer
+					});
+				});
 				data.state = response.body.chatters.viewers;
 				resolve();
 			});
@@ -120,6 +121,11 @@ module.exports.start = () => {
 		Promise.all(promiseList)
 			.then(() => {
 				console.log('Cool all went well');
+				bus.publish({
+					type: 'notification',
+					title: 'Event:',
+					message: 'Hey there :)'
+				});
 			})
 			.catch((error) => {
 				console.log('Shit hit the fan', error);

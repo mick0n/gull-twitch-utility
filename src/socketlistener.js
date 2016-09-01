@@ -1,36 +1,38 @@
-var config = require('../config');
-var bus = require('./bus');
 var WebSocket = require('ws');
 var WebSocketServer = require('ws').Server;
 
-var serverSocket = new WebSocketServer({port: config.websocketPort});
-
-var clientSocket;
-
-serverSocket.on('connection', (socket) => {
-	if (clientSocket) {
-		console.log('Already has connection, dumping it');
-		clientSocket.close();
+module.exports = function SocketListener(options) {
+	if (!options) {
+		throw new Error('Expected options but got none');
 	}
-	clientSocket = socket;
-	clientSocket.on('message', (messageData) => {
-		console.log(messageData);
-	});
-	console.log('client connected');
-	sendDataToClient({
-		type: 'greet',
-		title: 'New message',
-		message: 'sum message'
-	});
-});
 
-bus.subscribe((messageData) => {
-	sendDataToClient(messageData);
-});
+	var self = this;
+	var serverSocket = new WebSocketServer({port: options.port});
+	var clientSocket;
 
-function sendDataToClient(data) {
-	if (clientSocket && clientSocket.readyState === WebSocket.OPEN) {
-		console.log(data);
-		clientSocket.send(JSON.stringify(data));
+	serverSocket.on('connection', (socket) => {
+		if (clientSocket) {
+			console.log('Websocket port ' + options.port + ' already has connection, dumping it');
+			clientSocket.close();
+		}
+		clientSocket = socket;
+		clientSocket.on('message', (messageData) => {
+			options.messageHandler.call(self, messageData);
+		});
+		clientSocket.on('close', () => {
+			clientSocket = null;
+		});
+	});
+
+	function send(data) {
+		if (clientSocket && clientSocket.readyState === WebSocket.OPEN) {
+			clientSocket.send(JSON.stringify(data));
+		}
 	}
-}
+
+	console.log('Serversocket opened on port ' + options.port);
+
+	return {
+		send: send
+	};
+};

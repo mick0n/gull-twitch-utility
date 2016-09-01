@@ -16,6 +16,11 @@ module.exports.start = () => {
 		console.log(from);
 		console.log(to);
 		console.log(message);
+		bus.publish({
+			type: 'chat',
+			from: from,
+			message: message
+		});
 	});
 
 	client.addListener('error', (error) => {
