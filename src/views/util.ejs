@@ -72,7 +72,7 @@
 
 		var socket;
 		function connect() {
-			socket = new WebSocket('ws://localhost:8002');
+			socket = new WebSocket('ws://' + window.location.hostname + ':8002');
 			socket.onclose = function() {
 				setTimeout(connect, 7000);
 			}
