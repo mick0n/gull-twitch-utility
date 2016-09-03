@@ -46,7 +46,7 @@ var handlers = {
 				if (newFollowers.length > 0) {
 					_.each(newFollowers, (follower) => {
 						bus.publish({
-							type: 'notification',
+							type: 'follow',
 							title: 'New Follower:',
 							message: follower
 						});
@@ -68,12 +68,6 @@ var handlers = {
 				console.log(response.body.chatters);
 				var newViewers = _.difference(response.body.chatters.viewers, data.state);
 				var lostViewers = _.difference(data.state, response.body.chatters.viewers);
-				if (newViewers.length > 0) {
-					console.log('Viewers', newViewers);
-				}
-				if (lostViewers.length > 0) {
-					console.log('Lost viewers', lostViewers);
-				}
 				_.each(newViewers, (newViewer) => {
 					bus.publish({
 						type: 'viewer',
@@ -122,7 +116,7 @@ module.exports.start = () => {
 			.then(() => {
 				console.log('Cool all went well');
 				bus.publish({
-					type: 'notification',
+					type: 'follow',
 					title: 'Event:',
 					message: 'Hey there :)'
 				});

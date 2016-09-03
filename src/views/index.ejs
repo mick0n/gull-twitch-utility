@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Tajtle</title>
 	<style>
 		body {
 			margin: 0;
 			padding: 0;
 			border: 0;
-			width: <%= reso.width %>px;
-			height: <%= reso.height %>px;
+			width: <%= resolution.width %>px;
+			height: <%= resolution.height %>px;
 			font-family: sans-serif;
 		}
 
@@ -20,8 +19,8 @@
 		.notification {
 			overflow: hidden;
 			position: absolute;
-			left: <%= (reso.width / 2) - 410%>px;
-			top: <%= (reso.height / 2) - 80%>px;
+			left: <%= (resolution.width / 2) - 410%>px;
+			top: <%= (resolution.height / 2) - 80%>px;
 			width: 820px;
 			height: 160px;
 		}
@@ -60,7 +59,7 @@
 		.chat {
 			overflow: hidden;
 			position: absolute;
-			left: <%= (reso.width / 2) - 410%>px;
+			left: <%= (resolution.width / 2) - 410%>px;
 			bottom: 10px;
 			width: 820px;
 			height: 81px;
@@ -107,13 +106,13 @@
 	<script type="text/javascript">
 		var socket;
 		function connect() {
-			socket = new WebSocket('ws://localhost:8001');
+			socket = new WebSocket('ws://' + window.location.hostname + ':<%= streamport %>');
 			socket.onclose = function() {
 				setTimeout(connect, 7000);
 			}
 			socket.onmessage = function(message) {
 				var messageData = JSON.parse(message.data);
-				if(messageData.type === 'notification') {
+				if(messageData.type === 'follow') {
 					$('.content-title').html(messageData.title);
 					$('.content-text').html(messageData.message);
 					$('.inner-content').addClass('animate-inner-content');

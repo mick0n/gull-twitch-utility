@@ -13,11 +13,11 @@ app.set('views', __dirname + '/views');
 app.use('/pub', express.static(__dirname + '/public'));
 
 app.get('/', (req, res) => {
-	res.render('index', {reso: config.resolution});
+	res.render('index', config);
 });
 
 app.get('/util', (req, res) => {
-	res.render('util', {});
+	res.render('util', config);
 });
 
 var server = app.listen(config.port, () => {

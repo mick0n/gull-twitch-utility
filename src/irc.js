@@ -13,9 +13,6 @@ module.exports.start = () => {
 	});
 
 	client.addListener('message', (from, to, message) => {
-		console.log(from);
-		console.log(to);
-		console.log(message);
 		bus.publish({
 			type: 'chat',
 			from: from,

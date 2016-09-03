@@ -1,3 +1,4 @@
+![Gull-twitch-utility](https://raw.githubusercontent.com/mick0n/gull-twitch-utility/master/src/public/gull.png "Gull-twitch-utility")
 # gull-twitch-utility
 Utility for streamers to get information and events during livestream
 

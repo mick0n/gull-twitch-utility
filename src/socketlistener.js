@@ -17,7 +17,9 @@ module.exports = function SocketListener(options) {
 		}
 		clientSocket = socket;
 		clientSocket.on('message', (messageData) => {
-			options.messageHandler.call(self, messageData);
+			if(options.messageHandler) {
+				options.messageHandler.call(self, JSON.parse(messageData));
+			}
 		});
 		clientSocket.on('close', () => {
 			clientSocket = null;
