@@ -76,7 +76,6 @@
 
 		$('body').on('mousemove touchmove', function(event) {
 			if ($draggingElement) {
-				event.preventDefault();
 				var eventPosition = event.pageX || event.originalEvent.touches[0].pageX;
 				$draggingElement.css('-webkit-transform', 'translateX(' + (eventPosition - startX) + 'px)');
 			}
@@ -128,7 +127,7 @@
 		function convertMessage(messageData) {
 			switch (messageData.type) {
 				case 'chat':
-					return messageData.from + ': ' + messageData.message;
+					return '<strong>' + messageData.from + '</strong>: ' + messageData.message;
 				default:
 					return messageData.message;
 			}

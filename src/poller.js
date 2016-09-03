@@ -65,7 +65,6 @@ var handlers = {
 				if (!data.state) {
 					data.state = [];
 				}
-				console.log(response.body.chatters);
 				var newViewers = _.difference(response.body.chatters.viewers, data.state);
 				var lostViewers = _.difference(data.state, response.body.chatters.viewers);
 				_.each(newViewers, (newViewer) => {
@@ -113,14 +112,6 @@ module.exports.start = () => {
 			}
 		});
 		Promise.all(promiseList)
-			.then(() => {
-				console.log('Cool all went well');
-				bus.publish({
-					type: 'follow',
-					title: 'Event:',
-					message: 'Hey there :)'
-				});
-			})
 			.catch((error) => {
 				console.log('Shit hit the fan', error);
 			});
