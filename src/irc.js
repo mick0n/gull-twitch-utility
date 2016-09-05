@@ -4,7 +4,6 @@ var Client = require('irc').Client;
 
 
 module.exports.start = () => {
-	console.log('lets do this');
 	var client = new Client('irc.chat.twitch.tv', config.irc.nickname, {
 		password: config.irc.oauthToken,
 		channels: [

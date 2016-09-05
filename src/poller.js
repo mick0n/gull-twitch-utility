@@ -40,7 +40,6 @@ var handlers = {
 					});
 				}
 				var newFollowers = _.first(followerMap, jointIndex);
-				console.log(newFollowers);
 
 				data.state = followerMap;
 				if (newFollowers.length > 0) {
