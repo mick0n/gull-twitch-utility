@@ -1,7 +1,8 @@
 var _ = require('underscore');
+var Promise = require('bluebird');
 var config = require('../config');
 var bus = require('./bus');
-var needle = require('needle');
+var needle = Promise.promisifyAll(require('needle'));
 
 const baseUrl = 'https://api.twitch.tv/kraken';
 
@@ -17,36 +18,44 @@ const defaultOptions = {
 };
 
 var handlers = {
-	// Follows - Fetches top 100 followers from Twitch API and differentiates that with a previous snapshot of 100 followers to
-	// see if there are any new ones.
-	// TODO: Current implementation may become buggy when followers are leaving. Should probably take a look at that.
+	// Fetches a list of followers and pushes a message on the bus for each new follower in the list.
 	follows: (data) => {
-		return new Promise((resolve, reject) => {
-			needle.get(baseUrl + '/channels/' + config.channel + '/follows?limit=100&cursor=' + (Date.now() * 1000000), defaultOptions, (error, response) => {
-				if (error) {
-					return reject(error);
-				}
-
-				var followerMap = _.map(response.body.follows, (follower) => {
+		return needle.getAsync(baseUrl + '/channels/' + config.channel + '/follows?limit=100&cursor=' + (Date.now() * 1000000), defaultOptions)
+			.then(response => {
+				return _.map(response.body.follows, (follower) => {
 					return follower.user.name;
 				});
+			})
+			.then(followerMap => {
+				// Handle data population after polling for the first time.
 				if (!data.state) {
 					data.state = followerMap;
-					return resolve();
+					return;
 				}
 
+				// We'd normally solve this by using _.difference, but since a user can have many followers (>100) we need to handle this scenario:
+				// We have a list of 100 latest followers. One of these unfollow and we fetch the top 100 once more. Now a new name has shown up at the end of the list.
+				// We should ignore new names at the end of the list since these aren't really new. We only care about new names at the start of the list. These are actual new
+				// followers.
 				var jointIndex = 0,
-					firstInState = _.first(data.state);
-				if (firstInState !== _.first(followerMap)) { //Is the head of each list equal? If not, we have a new follower
-					jointIndex = _.findIndex(followerMap, (element) => { //At which index does the head of the current state exist? Compared to next state
+					firstInState = _.first(data.state); // Get first name in existing list
+				if (firstInState !== _.first(followerMap)) { //Check if first name in existing list is the same as first name in the fetched list.
+					// Find and return the index of the fetched list at which the name equals the first name in the existing list.
+					jointIndex = _.findIndex(followerMap, (element) => {
 						return element === firstInState;
 					});
 				}
-				var newFollowers = _.first(followerMap, jointIndex);
 
+				// Update state
 				data.state = followerMap;
-				if (newFollowers.length > 0) {
-					_.each(newFollowers, (follower) => {
+
+				// Return the difference of the existing and fetched follower lists. If the lists had the same first name, jointIndex will be 0 and _.first will return
+				// an empty list;
+				return _.first(followerMap, jointIndex);
+			})
+			.then(newFollowers => {
+				if (newFollowers && newFollowers.length > 0) {
+					return Promise.each(newFollowers, follower => {
 						bus.publish({
 							type: 'follow',
 							title: 'New Follower:',
@@ -54,39 +63,43 @@ var handlers = {
 						});
 					});
 				}
-				resolve();
 			});
-		});
 	},
-	// Viewers - this will get a list of current viewers that are identified by their username.
+
+	// Fetch a list of visible viewers of your stream and pushes a message on the bus for each new and lost viewer.
 	// Moderators and admin are in a separate list and will not be taken into account as viewers.
 	viewers: (data) => {
-		return new Promise((resolve, reject) => {
-			needle.get('http://tmi.twitch.tv/group/user/' + config.channel + '/chatters', (error, response) => {
-				if (error) {
-					return reject(error);
-				}
+		return needle.getAsync('http://tmi.twitch.tv/group/user/' + config.channel + '/chatters')
+			.then(response => {
+				// Init state if polling for the first time
 				if (!data.state) {
 					data.state = [];
 				}
-				var newViewers = _.difference(response.body.chatters.viewers, data.state);
-				var lostViewers = _.difference(data.state, response.body.chatters.viewers);
-				_.each(newViewers, (newViewer) => {
+
+				var viewerLists = {
+					newViewers: _.difference(response.body.chatters.viewers, data.state),
+					lostViewers: _.difference(data.state, response.body.chatters.viewers)
+				};
+
+				// Update state
+				data.state = response.body.chatters.viewers;
+
+				return viewerLists;
+			})
+			.then(viewerLists => {
+				_.each(viewerLists.newViewers, (newViewer) => {
 					bus.publish({
 						type: 'viewer',
 						message: 'New viewer: ' + newViewer
 					});
 				});
-				_.each(lostViewers, (lostViewer) => {
+				_.each(viewerLists.lostViewers, (lostViewer) => {
 					bus.publish({
 						type: 'viewer',
 						message: 'Lost viewer: ' + lostViewer
 					});
 				});
-				data.state = response.body.chatters.viewers;
-				resolve();
 			});
-		});
 	}
 };
 
@@ -109,16 +122,14 @@ var polls = [
 module.exports.start = () => {
 	setInterval(() => {
 		var time = Date.now();
-		var promiseList = [];
-		_.each(polls, (poll) => {
+
+		Promise.each(polls, poll => {
 			if (!poll.lastRuntime || poll.lastRuntime + (poll.interval * 1000) <= time) {
-				promiseList.push(handlers[poll.name].call(null, poll));
 				poll.lastRuntime = time;
+				return handlers[poll.name](poll);
 			}
+		}).catch(error => {
+			console.log('Poller error:', error);
 		});
-		Promise.all(promiseList)
-			.catch((error) => {
-				console.log('Poller error:', error);
-			});
 	}, 10 * 1000);
 };

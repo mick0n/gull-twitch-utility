@@ -2,12 +2,6 @@ var WebSocket = require('ws');
 var WebSocketServer = require('ws').Server;
 
 module.exports = function SocketListener(options) {
-	// At this point we do not use any "default" values, either they are configured in config.js or
-	// this will come to a quick stop right here.
-	if (!options) {
-		throw new Error('Expected options but got none');
-	}
-
 	var self = this;
 	var serverSocket = new WebSocketServer({port: options.port});
 
