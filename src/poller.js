@@ -17,6 +17,9 @@ const defaultOptions = {
 };
 
 var handlers = {
+	// Follows - Fetches top 100 followers from Twitch API and differentiates that with a previous snapshot of 100 followers to
+	// see if there are any new ones.
+	// TODO: Current implementation may become buggy when followers are leaving. Should probably take a look at that.
 	follows: (data) => {
 		return new Promise((resolve, reject) => {
 			needle.get(baseUrl + '/channels/' + config.channel + '/follows?limit=100&cursor=' + (Date.now() * 1000000), defaultOptions, (error, response) => {
@@ -55,9 +58,11 @@ var handlers = {
 			});
 		});
 	},
+	// Viewers - this will get a list of current viewers that are identified by their username.
+	// Moderators and admin are in a separate list and will not be taken into account as viewers.
 	viewers: (data) => {
 		return new Promise((resolve, reject) => {
-			needle.get('http://tmi.twitch.tv/group/user/mick0n_2/chatters', (error, response) => {
+			needle.get('http://tmi.twitch.tv/group/user/' + config.channel + '/chatters', (error, response) => {
 				if (error) {
 					return reject(error);
 				}
@@ -100,6 +105,7 @@ var polls = [
 	}
 ];
 
+//Start poller which runs every 10th second
 module.exports.start = () => {
 	setInterval(() => {
 		var time = Date.now();
@@ -112,7 +118,7 @@ module.exports.start = () => {
 		});
 		Promise.all(promiseList)
 			.catch((error) => {
-				console.log('Shit hit the fan', error);
+				console.log('Poller error:', error);
 			});
 	}, 10 * 1000);
 };
